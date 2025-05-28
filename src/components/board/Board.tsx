@@ -11,8 +11,13 @@ export function Board(props: GameProps) {
     const cards = G.cards;
 
     return (
-        <div>
-            {cards.map((e, i) => <Card key={i} {...e} />)}
+        <div className="flex flex-col justify-end items-center w-full h-[65%]">
+          <div>
+            {cards.map((e, i) => (
+              <Card key={i} card={e} idx={i} isTop={i === cards.length - 1} />
+            ))}
+          </div>
         </div>
-    )
+      );
+      
 }
