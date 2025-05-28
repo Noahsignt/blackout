@@ -2,11 +2,11 @@ import type { CardType } from "../../game/Game";
 import type { ReactElement } from 'react';
 import { heart, club, spade, diamond } from "./symbols";
 
-const suitSymbols: Record<CardType["suit"], { icon: ReactElement; color: string }> = {
-    s: { color: 'black', icon: spade},
-    h: { color: 'red', icon: heart },
-    d: { color: 'red', icon: diamond },
-    c: { color: 'black', icon: club },
+const suitSymbols: Record<CardType["suit"], { icon: ReactElement; }> = {
+    s: { icon: spade},
+    h: { icon: heart },
+    d: { icon: diamond },
+    c: { icon: club },
 };
 
 const rankNames: Record<number, string> = {
@@ -17,28 +17,23 @@ const rankNames: Record<number, string> = {
 };
 
 export function Card({ suit, num }: CardType) {
-  const value = rankNames[num] || num;
-  const suitData = suitSymbols[suit];
-
-  return (
-    <div style={{
-      border: '1px solid #ccc',
-      borderRadius: '8px',
-      width: '80px',
-      height: '120px',
-      padding: '8px',
-      backgroundColor: 'white',
-      color: suitData.color,
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      fontSize: '24px',
-      fontWeight: 'bold',
-    }}>
-      <div>{value}</div>
-      <div>{suitData.icon}</div>
-      <div style={{ transform: 'rotate(180deg)' }}>{value}</div>
-    </div>
-  );
-}
+    const value = rankNames[num] || num;
+    const suitData = suitSymbols[suit];
+    const colorClass = suit === 'h' || suit === 'd' ? 'text-red-600' : 'text-black';
+  
+    return (
+      <div
+        className={`border border-gray-300 rounded-lg 
+          w-20 h-30 p-2
+          bg-white
+          flex flex-col justify-between items-center
+          text-2xl font-bold
+          ${colorClass}`}
+      >
+        <div>{value}</div>
+        <div>{suitData.icon}</div>
+        <div className="rotate-180">{value}</div>
+      </div>
+    );
+  }
+  
