@@ -1,0 +1,19 @@
+# Summary
+Frontend and backend for Blackout online game.
+Probably the greatest card game ever made, have fun.
+
+# Local Dev Environment
+
+## Frontend
+The frontend is a simple React app using TypeScript and Tailwind. Additionally, it leverages `boardgame.io` to help with turn-taking functionality.
+
+### Starting
+```bash
+#!/bin/bash
+cd fe
+nvm use node
+npm i
+npm run start
+```
+
+## Backend
