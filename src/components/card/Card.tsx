@@ -24,30 +24,21 @@ type CardProps = {
 }
 
 export function Card({ card, idx, isTop }: CardProps) {
-    const [hovered, setHovered] = useState(false);
-  
-    const baseX = idx * 0.5;
-    const baseY = -idx * 0.5;
-  
     const value = rankNames[card.num] || card.num;
     const suitData = suitSymbols[card.suit];
+
+    // dynamic styling -> colors for suit, hover effect on top cards
     const colorClass = card.suit === 'h' || card.suit === 'd' ? 'text-red-600' : 'text-black';
-  
-    const transform = hovered && isTop
-      ? `translate(${baseX}px, ${baseY - 100}px) rotateY(360deg)`
-      : `translate(${baseX}px, ${baseY}px) rotateY(0deg)`;
-  
+    const hoverClass = isTop ? "hover:-translate-y-10 transition-transform duration-200 cursor-pointer" : "";
+
     return (
       <div
-        className={`absolute border border-gray-300 rounded-lg w-40 h-60 p-2 bg-white cursor-pointer`}
+        className={`absolute border border-gray-300 rounded-lg w-40 h-60 p-2 bg-white ${hoverClass}`}
         style={{
-          transform,
           zIndex: idx,
           transition: 'transform 0.5s ease-in-out',
           transformStyle: 'preserve-3d',
         }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
       >
         {/* front face */}
         <div
@@ -65,24 +56,6 @@ export function Card({ card, idx, isTop }: CardProps) {
           <div>{suitData.icon}</div>
           <div className="rotate-180">{value}</div>
         </div>
-  
-        {/* back face */}
-        <div
-            className="absolute inset-0 rounded-lg flex items-center justify-center text-white font-bold text-xl"
-            style={{
-                backfaceVisibility: 'hidden',
-                transform: 'rotateY(180deg)',
-                backgroundColor: 'black',
-                backgroundImage: `
-                linear-gradient(45deg, red 25%, transparent 25%),
-                linear-gradient(-45deg, red 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, red 75%),
-                linear-gradient(-45deg, transparent 75%, red 75%)
-                `,
-                backgroundSize: '20px 20px',
-                backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px',
-            }}
-            />
       </div>
     );
   }
