@@ -13,7 +13,11 @@ type GameHandler struct {
     GameService *service.GameService
 }
 
-// GetGameByID handles GET /game/{id}
+func NewGameHandler() *GameHandler {
+	return &GameHandler{}
+}
+
+// GET /game/{id} -> tries to return the game
 func (h *GameHandler) GetGameByID(w http.ResponseWriter, r *http.Request) {
     id := chi.URLParam(r, "id")
 
@@ -27,7 +31,7 @@ func (h *GameHandler) GetGameByID(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(game)
 }
 
-// CreateGame handles POST /game
+// POST /game -> tries to post the body of request as a new game
 func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
     var req model.Game
 

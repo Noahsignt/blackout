@@ -3,15 +3,14 @@ package main
 import (
     "log"
     "net/http"
+
+    "github.com/noahsignt/blackout/be/handler"
 )
 
 func main() {
-    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        w.Write([]byte("Server is running!"))
-    })
+    r := handler.NewRouter()
 
-    log.Println("🚀 Server listening on http://localhost:8080")
-    if err := http.ListenAndServe(":8080", nil); err != nil {
-        log.Fatal("Server failed:", err)
+    if err := http.ListenAndServe(":8080", r); err != nil {
+        log.Fatal(err)
     }
 }
