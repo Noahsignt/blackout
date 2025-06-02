@@ -23,7 +23,6 @@ func (s *GameService) GetGameByID(id string) (*model.Game, error) {
 	// TODO: don't stub games
     return &model.Game{
         ID:   id,
-        Name: "Sample Game",
     }, nil
 }
 
