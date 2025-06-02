@@ -3,6 +3,7 @@ package main
 import (
     "log"
     "net/http"
+    "time"
 
     "github.com/noahsignt/blackout/be/handler"
     "github.com/noahsignt/blackout/be/config"
@@ -16,7 +17,7 @@ func main() {
 
     // -- Game Repository --
     gameRepo, err := repository.InitGameRepo(ctx.DBUri, "blackout")
-    if err == nil {
+    if err != nil {
         log.Fatal(err)
     }
 
@@ -25,6 +26,7 @@ func main() {
 
     // -- Router --
     router := handler.NewRouter(*gameService)
+    log.Printf("✅ Server started successfully at %s", time.Now().Format(time.RFC3339))
     if err := http.ListenAndServe(":8080", router); err != nil {
         log.Fatal(err)
     }

@@ -35,12 +35,14 @@ func (h *GameHandler) GetGameByID(w http.ResponseWriter, r *http.Request) {
 func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
     var req model.Game
 
+    ctx := r.Context();
+
     if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
         http.Error(w, "Invalid request body", http.StatusBadRequest)
         return
     }
 
-    game, err := h.gameService.CreateGame(&req)
+    game, err := h.gameService.CreateGame(ctx, &req)
     if err != nil {
         http.Error(w, "Failed to create game", http.StatusInternalServerError)
         return

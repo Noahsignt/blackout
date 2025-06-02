@@ -3,6 +3,7 @@ package repository
 import (
     "context"
     "fmt"
+
     "go.mongodb.org/mongo-driver/v2/mongo"
     "go.mongodb.org/mongo-driver/v2/mongo/options"
     "go.mongodb.org/mongo-driver/v2/mongo/readpref"
@@ -26,11 +27,11 @@ func InitMongo(dbURI string) (*mongo.Client, error) {
 }
 
 func InitGameRepo(dbURI string, dbName string) (*GameRepo, error) {
-    client, err := InitMongo(dbURI)
-    if err != nil {
-        return nil, err
-    }
+  client, err := InitMongo(dbURI)
+  if err != nil {
+      return nil, err
+  }
 
-    db := client.Database(dbName)
-    return NewGameRepo(db), nil
+  db := client.Database(dbName)
+  return NewGameRepo(db), nil
 }

@@ -2,7 +2,7 @@ package model
 
 type Round struct {
 	ID   string 			    `bson:"_id,omitempty" json:"id"`
-	CurrRound int               `bson:"currRound" json:"currRound"`
+	RoundNum int               `bson:"roundNum" json:"roundNum"`
 	Bets      map[string]int    `bson:"bets" json:"bets"`                
 	WonHands  map[string]int    `bson:"wonHands" json:"wonHands"`        
 	Hands     map[string][]Card `bson:"hands" json:"hands"`     

@@ -18,3 +18,9 @@ npm run start
 
 ## Backend
 The backend is written in Go. Should mean super performant (spend less $$$ on EC2 instances) for small number of players.
+
+```bash
+#!/bin/bash
+cd be
+go run main.go
+```
