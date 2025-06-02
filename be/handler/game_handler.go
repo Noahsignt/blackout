@@ -10,18 +10,18 @@ import (
 )
 
 type GameHandler struct {
-    GameService *service.GameService
+    gameService *service.GameService
 }
 
-func NewGameHandler() *GameHandler {
-	return &GameHandler{}
+func NewGameHandler(gameService service.GameService) *GameHandler {
+	return &GameHandler{&gameService}
 }
 
 // GET /game/{id} -> tries to return the game
 func (h *GameHandler) GetGameByID(w http.ResponseWriter, r *http.Request) {
     id := chi.URLParam(r, "id")
 
-    game, err := h.GameService.GetGameByID(id)
+    game, err := h.gameService.GetGameByID(id)
     if err != nil {
         http.Error(w, "Game not found", http.StatusNotFound)
         return
@@ -40,7 +40,7 @@ func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    game, err := h.GameService.CreateGame(&req)
+    game, err := h.gameService.CreateGame(&req)
     if err != nil {
         http.Error(w, "Failed to create game", http.StatusInternalServerError)
         return

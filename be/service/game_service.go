@@ -2,16 +2,17 @@ package service
 
 import (
     "errors"
+
     "github.com/noahsignt/blackout/be/model"
+    "github.com/noahsignt/blackout/be/repository"
 )
 
 type GameService struct {
-    // You can add a repository field here later, e.g.
-    // Repo *repository.GameRepository
+    gameRepo *repository.GameRepo
 }
 
-func NewGameService() *GameService {
-    return &GameService{}
+func NewGameService(gameRepo repository.GameRepo) *GameService {
+    return &GameService{&gameRepo}
 }
 
 func (s *GameService) GetGameByID(id string) (*model.Game, error) {
