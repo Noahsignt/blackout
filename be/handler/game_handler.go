@@ -34,12 +34,17 @@ func (h *GameHandler) GetGameByID(w http.ResponseWriter, r *http.Request) {
 // POST /game -> tries to post the body of request as a new game
 func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
     var req model.Game
-
     ctx := r.Context();
 
+    // try and decode request body into Game struct
     if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
         http.Error(w, "Invalid request body", http.StatusBadRequest)
         return
+    }
+
+    // validate fields
+    if req.NumRounds == 0 {
+        http.Error(w, "Missing required field: number of rounds", http.StatusBadRequest)
     }
 
     game, err := h.gameService.CreateGame(ctx, &req)
