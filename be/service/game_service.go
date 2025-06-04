@@ -5,6 +5,8 @@ import (
 	"errors"
     "fmt"
 
+    "go.mongodb.org/mongo-driver/v2/bson"
+
 	"github.com/noahsignt/blackout/be/model"
 	"github.com/noahsignt/blackout/be/repository"
 )
@@ -17,15 +19,24 @@ func NewGameService(gameRepo repository.GameRepo) *GameService {
     return &GameService{&gameRepo}
 }
 
-func (s *GameService) GetGameByID(id string) (*model.Game, error) {
+func (s *GameService) GetGameByID(ctx context.Context, id string) (*model.Game, error) {
     if id == "" {
         return nil, errors.New("invalid id")
     }
 
-	// TODO: don't stub games
-    return &model.Game{
-        ID:   id,
-    }, nil
+    oid, err := bson.ObjectIDFromHex(id)
+
+    if err != nil {
+        return nil, errors.New("could not convert to bson id")
+    }
+
+    game, err := s.gameRepo.GetGameByID(ctx, oid)
+
+    if err != nil {
+        return nil, errors.New("could not find game")
+    }
+
+    return game, nil
 }
 
 func (s *GameService) CreateGame(ctx context.Context, game *model.Game) (*model.Game, error) {
@@ -33,7 +44,7 @@ func (s *GameService) CreateGame(ctx context.Context, game *model.Game) (*model.
         return nil, errors.New("game is nil")
     }
 
-    createdGame, err := s.gameRepo.CreateGame(ctx, *game)
+    createdGame, err := s.gameRepo.CreateGame(ctx, game)
     if err != nil {
         return nil, fmt.Errorf("failed to create game: %w", err)
     }
@@ -42,7 +53,17 @@ func (s *GameService) CreateGame(ctx context.Context, game *model.Game) (*model.
 }
 
 func (s *GameService) StartGame(ctx context.Context, id string) (*model.Game, error) {
-    game, err := s.gameRepo.GetGameByID(ctx, id)
+    if id == "" {
+        return nil, errors.New("invalid id")
+    }
+
+    oid, err := bson.ObjectIDFromHex(id)
+
+    if err != nil {
+        return nil, errors.New("could not convert to bson id")
+    }
+
+    game, err := s.gameRepo.GetGameByID(ctx, oid)
     if(err != nil) {
         return nil, fmt.Errorf("error finding game: %w", err)
     }
@@ -63,7 +84,7 @@ func (s *GameService) StartGame(ctx context.Context, id string) (*model.Game, er
     firstRound := model.NewRound(1, firstHand)
     game.Round = *firstRound
 
-    updatedGame, err := s.gameRepo.PutGame(ctx, id, *game)
+    updatedGame, err := s.gameRepo.PutGame(ctx, oid, *game)
     if(err != nil) {
         return nil, fmt.Errorf("error updating game: %w", err)
     }

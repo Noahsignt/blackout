@@ -19,9 +19,10 @@ func NewGameHandler(gameService service.GameService) *GameHandler {
 
 // GET /game/{id} -> tries to return the game
 func (h *GameHandler) GetGameByID(w http.ResponseWriter, r *http.Request) {
+    ctx := r.Context();
     id := chi.URLParam(r, "id")
 
-    game, err := h.gameService.GetGameByID(id)
+    game, err := h.gameService.GetGameByID(ctx, id)
     if err != nil {
         http.Error(w, "Game not found", http.StatusNotFound)
         return
