@@ -1,40 +1,74 @@
 package service
 
 import (
-    "errors"
-    "github.com/noahsignt/blackout/be/model"
+	"context"
+	"errors"
+    "fmt"
+
+    "go.mongodb.org/mongo-driver/v2/bson"
+
+	"github.com/noahsignt/blackout/be/model"
+	"github.com/noahsignt/blackout/be/repository"
 )
 
 type GameService struct {
-    // You can add a repository field here later, e.g.
-    // Repo *repository.GameRepository
+    gameRepo *repository.GameRepo
 }
 
-func NewGameService() *GameService {
-    return &GameService{}
+func NewGameService(gameRepo repository.GameRepo) *GameService {
+    return &GameService{&gameRepo}
 }
 
-// GetGameByID returns a dummy game or error
-func (s *GameService) GetGameByID(id string) (*model.Game, error) {
-    // Minimal stub: return a fake game for any id, or error if id empty
-    if id == "" {
-        return nil, errors.New("invalid id")
+func (s *GameService) GetGameByID(ctx context.Context, id bson.ObjectID) (*model.Game, error) {
+    game, err := s.gameRepo.GetGameByID(ctx, id)
+
+    if err != nil {
+        return nil, errors.New("could not find game")
     }
 
-    return &model.Game{
-        ID:   id,
-        Name: "Sample Game",
-        // add more fields if needed
-    }, nil
+    return game, nil
 }
 
-// CreateGame accepts a game and "creates" it (dummy)
-func (s *GameService) CreateGame(game *model.Game) (*model.Game, error) {
-    // Just return the same game with a fake ID for now
+func (s *GameService) CreateGame(ctx context.Context, game *model.Game) (*model.Game, error) {
     if game == nil {
         return nil, errors.New("game is nil")
     }
 
-    game.ID = "generated-id-123"
-    return game, nil
+    createdGame, err := s.gameRepo.CreateGame(ctx, game)
+    if err != nil {
+        return nil, fmt.Errorf("failed to create game: %w", err)
+    }
+
+    return createdGame, nil
 }
+
+func (s *GameService) StartGame(ctx context.Context, id bson.ObjectID) (*model.Game, error) {
+    game, err := s.gameRepo.GetGameByID(ctx, id)
+    if(err != nil) {
+        return nil, fmt.Errorf("error finding game: %w", err)
+    }
+
+    if(game == nil) {
+        return nil, fmt.Errorf("game with id: %s could not be found", id)
+    }
+
+    // validate game is ready to start
+    if(len(game.Players) < 3) {
+        return nil, fmt.Errorf("game with id: %s does not have enough players (%d) to start", id, len(game.Players))
+    }
+
+    // start a hand with the first player having the first turn
+    firstHand := model.NewHand(0)
+
+    // start a round with 1 card being dealt
+    firstRound := model.NewRound(1, firstHand)
+    game.Round = *firstRound
+
+    updatedGame, err := s.gameRepo.PutGame(ctx, id, *game)
+    if(err != nil) {
+        return nil, fmt.Errorf("error updating game: %w", err)
+    }
+
+    return updatedGame, nil
+}
+
