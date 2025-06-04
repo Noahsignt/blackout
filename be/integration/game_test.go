@@ -25,7 +25,7 @@ func TestCreateGame(t *testing.T) {
 
     t.Logf("Created game: %+v", game)
 
-    found, err := service.GetGameByID(ctx, game.ID.Hex())
+    found, err := service.GetGameByID(ctx, game.ID)
     require.NoError(t, err)
     require.NotNil(t, found)
 }

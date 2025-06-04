@@ -19,18 +19,8 @@ func NewGameService(gameRepo repository.GameRepo) *GameService {
     return &GameService{&gameRepo}
 }
 
-func (s *GameService) GetGameByID(ctx context.Context, id string) (*model.Game, error) {
-    if id == "" {
-        return nil, errors.New("invalid id")
-    }
-
-    oid, err := bson.ObjectIDFromHex(id)
-
-    if err != nil {
-        return nil, errors.New("could not convert to bson id")
-    }
-
-    game, err := s.gameRepo.GetGameByID(ctx, oid)
+func (s *GameService) GetGameByID(ctx context.Context, id bson.ObjectID) (*model.Game, error) {
+    game, err := s.gameRepo.GetGameByID(ctx, id)
 
     if err != nil {
         return nil, errors.New("could not find game")
@@ -52,18 +42,8 @@ func (s *GameService) CreateGame(ctx context.Context, game *model.Game) (*model.
     return createdGame, nil
 }
 
-func (s *GameService) StartGame(ctx context.Context, id string) (*model.Game, error) {
-    if id == "" {
-        return nil, errors.New("invalid id")
-    }
-
-    oid, err := bson.ObjectIDFromHex(id)
-
-    if err != nil {
-        return nil, errors.New("could not convert to bson id")
-    }
-
-    game, err := s.gameRepo.GetGameByID(ctx, oid)
+func (s *GameService) StartGame(ctx context.Context, id bson.ObjectID) (*model.Game, error) {
+    game, err := s.gameRepo.GetGameByID(ctx, id)
     if(err != nil) {
         return nil, fmt.Errorf("error finding game: %w", err)
     }
@@ -84,7 +64,7 @@ func (s *GameService) StartGame(ctx context.Context, id string) (*model.Game, er
     firstRound := model.NewRound(1, firstHand)
     game.Round = *firstRound
 
-    updatedGame, err := s.gameRepo.PutGame(ctx, oid, *game)
+    updatedGame, err := s.gameRepo.PutGame(ctx, id, *game)
     if(err != nil) {
         return nil, fmt.Errorf("error updating game: %w", err)
     }
