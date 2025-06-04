@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"testing"
+    "fmt"
 
 	"github.com/noahsignt/blackout/be/model"
 	"github.com/noahsignt/blackout/be/repository"
@@ -36,6 +37,20 @@ func TestFindGame(t *testing.T) {
 	require.NotNil(t, found)
 }
 
+func TestJoinGame(t *testing.T) {
+    ctx, service, game := createTestGame(t)
+
+    t.Logf("Created game: %+v", game)
+
+    player := model.Player{Name: "TestJoinGamePlayer"}
+    updatedGame, err := service.JoinGame(ctx, game.ID, player)
+    require.NoError(t, err)
+    require.NotNil(t, updatedGame)
+
+    foundPlayer := updatedGame.Players[0]
+    require.Equal(t, player, foundPlayer)
+}
+
 func TestStartGame0Players(t *testing.T) {
 	ctx, service, game := createTestGame(t)
 
@@ -43,4 +58,48 @@ func TestStartGame0Players(t *testing.T) {
 
 	_, err := service.StartGame(ctx, game.ID)
 	require.ErrorIs(t, err, errors.ErrTooFewPlayers)
+}
+
+func TestStartGame7Players(t *testing.T) {
+	ctx, service, game := createTestGame(t)
+
+	t.Logf("Created game: %+v", game)
+
+    for i := range 7 {
+        playerID := fmt.Sprintf("player-%d", i)
+        _, err := service.JoinGame(ctx, game.ID, model.Player{ID: playerID})
+        if err != nil {
+            t.Fatalf("failed to join game with player %d: %v", i, err)
+        }
+    }
+
+	_, err := service.StartGame(ctx, game.ID)
+	require.ErrorIs(t, err, errors.ErrTooManyPlayers)
+}
+
+
+func TestStartGame3Players(t *testing.T) {
+    ctx, service, game := createTestGame(t)
+
+    t.Logf("Created game: %+v", game)
+
+    for i := range 3 {
+        playerID := fmt.Sprintf("player-%d", i)
+        _, err := service.JoinGame(ctx, game.ID, model.Player{ID: playerID})
+        if err != nil {
+            t.Fatalf("failed to join game with player %d: %v", i, err)
+        }
+    }
+
+    updatedGame, err := service.StartGame(ctx, game.ID)
+    round := updatedGame.Round
+    hand := round.CurrHand
+
+    t.Logf("Updated game: %+v", updatedGame)
+
+    require.Equal(t, 1, round.RoundNum)
+    require.GreaterOrEqual(t, round.Trump, 1)
+    require.LessOrEqual(t, round.Trump, 4)
+    require.Equal(t, 0, hand.StartingIdx)
+    require.NoError(t, err)
 }
