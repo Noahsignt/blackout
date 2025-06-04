@@ -15,8 +15,8 @@ func main() {
     // -- Environment Variables / Context --
     ctx := config.Load()
 
-    // -- Game Repository --
-    gameRepo, err := repository.InitGameRepo(ctx.DBUri, "blackout")
+    // -- Repositories --
+    gameRepo, _, err := repository.InitRepos(ctx.DBUri, "blackout")
     if err != nil {
         log.Fatal(err)
     }

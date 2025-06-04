@@ -11,6 +11,7 @@ import (
     "github.com/noahsignt/blackout/be/errors"
 
 	"github.com/stretchr/testify/require"
+    "go.mongodb.org/mongo-driver/v2/bson"
 )
 
 func createTestGame(t *testing.T) (context.Context, *service.GameService, *model.Game) {
@@ -66,8 +67,12 @@ func TestStartGame7Players(t *testing.T) {
 	t.Logf("Created game: %+v", game)
 
     for i := range 7 {
-        playerID := fmt.Sprintf("player-%d", i)
-        _, err := service.JoinGame(ctx, game.ID, model.Player{ID: playerID})
+        playerIDHex := fmt.Sprintf("player-%d", i)
+        playerID, err := bson.ObjectIDFromHex(playerIDHex)
+        if err != nil {
+            t.Fatalf("invalid player ID hex string %q: %v", playerIDHex, err)
+        }
+        _, err = service.JoinGame(ctx, game.ID, model.Player{ID: playerID})
         if err != nil {
             t.Fatalf("failed to join game with player %d: %v", i, err)
         }
@@ -84,8 +89,12 @@ func TestStartGame3Players(t *testing.T) {
     t.Logf("Created game: %+v", game)
 
     for i := range 3 {
-        playerID := fmt.Sprintf("player-%d", i)
-        _, err := service.JoinGame(ctx, game.ID, model.Player{ID: playerID})
+        playerIDHex := fmt.Sprintf("player-%d", i)
+        playerID, err := bson.ObjectIDFromHex(playerIDHex)
+        if err != nil {
+            t.Fatalf("invalid player ID hex string %q: %v", playerIDHex, err)
+        }
+        _, err = service.JoinGame(ctx, game.ID, model.Player{ID: playerID})
         if err != nil {
             t.Fatalf("failed to join game with player %d: %v", i, err)
         }

@@ -30,6 +30,7 @@ func (s *GameService) GetGameByID(ctx context.Context, id bson.ObjectID) (*model
 	return game, nil
 }
 
+//TODO: player ID instead of model
 func (s *GameService) JoinGame(ctx context.Context, id bson.ObjectID, player model.Player) (*model.Game, error) {
 	game, err := s.gameRepo.GetGameByID(ctx, id)
 
