@@ -11,25 +11,27 @@ import (
     "github.com/noahsignt/blackout/be/errors"
 
 	"github.com/stretchr/testify/require"
-    "go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func createTestGame(t *testing.T) (context.Context, *service.GameService, *model.Game) {
+func createTestGame(t *testing.T) (context.Context, *service.GameService, *service.PlayerService, *model.Game) {
 	ctx := context.Background()
 
 	db := client.Database("testdb")
-	repo := repository.NewGameRepo(db)
-	service := service.NewGameService(*repo)
+	gameRepo := repository.NewGameRepo(db)
+    playerRepo := repository.NewPlayerRepo(db)
+
+    playerService := service.NewPlayerService(playerRepo)
+	gameService := service.NewGameService(gameRepo, playerService)
 
 	game := &model.Game{}
-	createdGame, err := service.CreateGame(ctx, game)
+	createdGame, err := gameService.CreateGame(ctx, game)
 	require.NoError(t, err)
 
-	return ctx, service, createdGame
+	return ctx, gameService, playerService, createdGame
 }
 
 func TestFindGame(t *testing.T) {
-	ctx, service, game := createTestGame(t)
+	ctx, service, _, game := createTestGame(t)
 
 	t.Logf("Created game: %+v", game)
 
@@ -39,21 +41,23 @@ func TestFindGame(t *testing.T) {
 }
 
 func TestJoinGame(t *testing.T) {
-    ctx, service, game := createTestGame(t)
+    ctx, gameService, playerService, game := createTestGame(t)
 
     t.Logf("Created game: %+v", game)
 
-    player := model.Player{Name: "TestJoinGamePlayer"}
-    updatedGame, err := service.JoinGame(ctx, game.ID, player)
+    player, err := playerService.CreatePlayer(ctx, &model.Player{Name: "TestJoinGamePlayer"})
+    require.NoError(t, err)
+    updatedGame, err := gameService.JoinGame(ctx, game.ID, player.ID)
+
     require.NoError(t, err)
     require.NotNil(t, updatedGame)
 
     foundPlayer := updatedGame.Players[0]
-    require.Equal(t, player, foundPlayer)
+    require.Equal(t, *player, foundPlayer)
 }
 
 func TestStartGame0Players(t *testing.T) {
-	ctx, service, game := createTestGame(t)
+	ctx, service, _, game := createTestGame(t)
 
 	t.Logf("Created game: %+v", game)
 
@@ -62,45 +66,41 @@ func TestStartGame0Players(t *testing.T) {
 }
 
 func TestStartGame7Players(t *testing.T) {
-	ctx, service, game := createTestGame(t)
+	ctx, gameService, playerService, game := createTestGame(t)
 
 	t.Logf("Created game: %+v", game)
 
     for i := range 7 {
         playerIDHex := fmt.Sprintf("player-%d", i)
-        playerID, err := bson.ObjectIDFromHex(playerIDHex)
-        if err != nil {
-            t.Fatalf("invalid player ID hex string %q: %v", playerIDHex, err)
-        }
-        _, err = service.JoinGame(ctx, game.ID, model.Player{ID: playerID})
+        player, err := playerService.CreatePlayer(ctx, &model.Player{Name: playerIDHex})
+        require.NoError(t, err)
+        _, err = gameService.JoinGame(ctx, game.ID, player.ID)
         if err != nil {
             t.Fatalf("failed to join game with player %d: %v", i, err)
         }
     }
 
-	_, err := service.StartGame(ctx, game.ID)
+	_, err := gameService.StartGame(ctx, game.ID)
 	require.ErrorIs(t, err, errors.ErrTooManyPlayers)
 }
 
 
 func TestStartGame3Players(t *testing.T) {
-    ctx, service, game := createTestGame(t)
+    ctx, gameService, playerService, game := createTestGame(t)
 
     t.Logf("Created game: %+v", game)
 
     for i := range 3 {
         playerIDHex := fmt.Sprintf("player-%d", i)
-        playerID, err := bson.ObjectIDFromHex(playerIDHex)
-        if err != nil {
-            t.Fatalf("invalid player ID hex string %q: %v", playerIDHex, err)
-        }
-        _, err = service.JoinGame(ctx, game.ID, model.Player{ID: playerID})
+        player, err := playerService.CreatePlayer(ctx, &model.Player{Name: playerIDHex})
+        require.NoError(t, err)
+        _, err = gameService.JoinGame(ctx, game.ID, player.ID)
         if err != nil {
             t.Fatalf("failed to join game with player %d: %v", i, err)
         }
     }
 
-    updatedGame, err := service.StartGame(ctx, game.ID)
+    updatedGame, err := gameService.StartGame(ctx, game.ID)
     round := updatedGame.Round
     hand := round.CurrHand
 

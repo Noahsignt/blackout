@@ -14,10 +14,14 @@ import (
 
 type GameService struct {
 	gameRepo *repository.GameRepo
+    playerService *PlayerService
 }
 
-func NewGameService(gameRepo repository.GameRepo) *GameService {
-	return &GameService{&gameRepo}
+func NewGameService(gameRepo *repository.GameRepo, playerService *PlayerService) *GameService {
+    return &GameService{
+        gameRepo: gameRepo,
+        playerService: playerService,
+    }
 }
 
 func (s *GameService) GetGameByID(ctx context.Context, id bson.ObjectID) (*model.Game, error) {
@@ -30,8 +34,7 @@ func (s *GameService) GetGameByID(ctx context.Context, id bson.ObjectID) (*model
 	return game, nil
 }
 
-//TODO: player ID instead of model
-func (s *GameService) JoinGame(ctx context.Context, id bson.ObjectID, player model.Player) (*model.Game, error) {
+func (s *GameService) JoinGame(ctx context.Context, id bson.ObjectID, pid bson.ObjectID) (*model.Game, error) {
 	game, err := s.gameRepo.GetGameByID(ctx, id)
 
 	if err != nil {
@@ -40,12 +43,19 @@ func (s *GameService) JoinGame(ctx context.Context, id bson.ObjectID, player mod
 
 	// no duplicate players over id
 	for _, p := range game.Players {
-		if p.ID == player.ID {
-			return nil, fmt.Errorf("player with ID %s already exists", player.ID)
+		if p.ID == pid {
+			return nil, fmt.Errorf("player with ID %s already exists", pid)
 		}
 	}
 
-    game.Players = append(game.Players, player)
+    // try and find player
+    player, err := s.playerService.GetPlayerByID(ctx, pid)
+
+    if err != nil {
+        return nil, stdErrors.New("could not find player associated with id")
+    }
+
+    game.Players = append(game.Players, *player)
     updatedGame, err := s.gameRepo.PutGame(ctx, id, *game)
 
     if err != nil {
