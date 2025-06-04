@@ -2,13 +2,14 @@ package service
 
 import (
 	"context"
-	"errors"
+    stdErrors "errors"
     "fmt"
 
     "go.mongodb.org/mongo-driver/v2/bson"
 
 	"github.com/noahsignt/blackout/be/model"
 	"github.com/noahsignt/blackout/be/repository"
+    "github.com/noahsignt/blackout/be/errors"
 )
 
 type GameService struct {
@@ -23,7 +24,7 @@ func (s *GameService) GetGameByID(ctx context.Context, id bson.ObjectID) (*model
     game, err := s.gameRepo.GetGameByID(ctx, id)
 
     if err != nil {
-        return nil, errors.New("could not find game")
+        return nil, stdErrors.New("could not find game")
     }
 
     return game, nil
@@ -31,7 +32,7 @@ func (s *GameService) GetGameByID(ctx context.Context, id bson.ObjectID) (*model
 
 func (s *GameService) CreateGame(ctx context.Context, game *model.Game) (*model.Game, error) {
     if game == nil {
-        return nil, errors.New("game is nil")
+        return nil, stdErrors.New("game is nil")
     }
 
     createdGame, err := s.gameRepo.CreateGame(ctx, game)
@@ -53,8 +54,8 @@ func (s *GameService) StartGame(ctx context.Context, id bson.ObjectID) (*model.G
     }
 
     // validate game is ready to start
-    if(len(game.Players) < 3) {
-        return nil, fmt.Errorf("game with id: %s does not have enough players (%d) to start", id, len(game.Players))
+    if len(game.Players) < 3 {
+        return nil, fmt.Errorf("game with id: %s does not have enough players (%d) to start: %w", id, len(game.Players), errors.ErrTooFewPlayers)
     }
 
     // start a hand with the first player having the first turn
