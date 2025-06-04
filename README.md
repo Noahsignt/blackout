@@ -13,7 +13,7 @@ The frontend is a simple React app using TypeScript and Tailwind. Additionally, 
 cd fe
 nvm use node
 npm i
-npm run start
+npm run dev
 ```
 
 ## Backend

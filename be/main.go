@@ -15,14 +15,15 @@ func main() {
     // -- Environment Variables / Context --
     ctx := config.Load()
 
-    // -- Game Repository --
-    gameRepo, err := repository.InitGameRepo(ctx.DBUri, "blackout")
+    // -- Repositories --
+    gameRepo, playerRepo, err := repository.InitRepos(ctx.DBUri, "blackout")
     if err != nil {
         log.Fatal(err)
     }
 
-    // -- Game Services -> handles logic related to game construction, etc --
-    gameService := service.NewGameService(*gameRepo)
+    // -- Services --
+    playerService := service.NewPlayerService(playerRepo)
+    gameService := service.NewGameService(gameRepo, playerService)
 
     // -- Router --
     router := handler.NewRouter(*gameService)
