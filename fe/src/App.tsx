@@ -1,10 +1,12 @@
-import { Client } from 'boardgame.io/react';
-import { Blackout } from './game/Game';
-import { Board } from './components/board/Board';
+import { Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
 
-const App = Client({ 
-  game: Blackout,
-  board: Board
-});
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+    </Routes>
+  );
+}
 
 export default App;
