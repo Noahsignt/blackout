@@ -46,16 +46,17 @@ func (r *PlayerRepo) GetPlayerByID(ctx context.Context, id bson.ObjectID) (*mode
     return &player, nil
 }
 
-func (r *PlayerRepo) UpdatePlayer(ctx context.Context, id bson.ObjectID, player model.Player) (*model.Player, error) {
+func (r *PlayerRepo) UpdatePlayerScore(ctx context.Context, id bson.ObjectID, newScore int) (*model.Player, error) {
     filter := bson.M{"_id": id}
-    res, err := r.collection.ReplaceOne(ctx, filter, player)
+    update := bson.M{"$set": bson.M{"score": newScore}}
+
+    res, err := r.collection.UpdateOne(ctx, filter, update)
     if err != nil {
-        return nil, fmt.Errorf("failed to update player: %w", err)
+        return nil, err
     }
-
     if res.MatchedCount == 0 {
-        return nil, fmt.Errorf("player with id %s not found", id)
+        return nil, fmt.Errorf("player not found")
     }
 
-    return &player, nil
+    return r.GetPlayerByID(ctx, id)
 }

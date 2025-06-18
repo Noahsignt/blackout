@@ -2,7 +2,6 @@ package service
 
 import (
     "context"
-    "fmt"
 
     "go.mongodb.org/mongo-driver/v2/bson"
     "github.com/noahsignt/blackout/be/model"
@@ -19,18 +18,20 @@ func NewPlayerService(playerRepo *repository.PlayerRepo) *PlayerService {
     }
 }
 
-func (s *PlayerService) CreatePlayer(ctx context.Context, player *model.Player) (*model.Player, error) {
-    if player == nil {
-        return nil, fmt.Errorf("player is nil")
+func (s *PlayerService) CreatePlayer(ctx context.Context, userID, gameID bson.ObjectID) (*model.Player, error) {
+    player := &model.Player{
+        UserID: userID,
+        GameID: gameID,
+        Score:  0,
     }
-
     return s.playerRepo.CreatePlayer(ctx, player)
 }
 
-func (s *PlayerService) GetPlayerByID(ctx context.Context, id bson.ObjectID) (*model.Player, error) {
-    return s.playerRepo.GetPlayerByID(ctx, id)
+func (s *PlayerService) UpdatePlayerScore(ctx context.Context, playerID bson.ObjectID, newScore int) (*model.Player, error) {
+    return s.playerRepo.UpdatePlayerScore(ctx, playerID, newScore)
 }
 
-func (s *PlayerService) UpdatePlayer(ctx context.Context, id bson.ObjectID, player *model.Player) (*model.Player, error) {
-    return s.playerRepo.UpdatePlayer(ctx, id, *player)
+
+func (s *PlayerService) GetPlayerByID(ctx context.Context, id bson.ObjectID) (*model.Player, error) {
+    return s.playerRepo.GetPlayerByID(ctx, id)
 }

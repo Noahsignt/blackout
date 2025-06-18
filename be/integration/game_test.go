@@ -13,25 +13,27 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createTestGame(t *testing.T) (context.Context, *service.GameService, *service.PlayerService, *model.Game) {
+func createTestGame(t *testing.T) (context.Context, *service.GameService, *service.PlayerService, *service.UserService, *model.Game) {
 	ctx := context.Background()
 
 	db := client.Database("testdb")
 	gameRepo := repository.NewGameRepo(db)
     playerRepo := repository.NewPlayerRepo(db)
+    userRepo := repository.NewUserRepo(db)
 
     playerService := service.NewPlayerService(playerRepo)
 	gameService := service.NewGameService(gameRepo, playerService)
+    userService := service.NewUserService(userRepo)
 
 	game := &model.Game{}
 	createdGame, err := gameService.CreateGame(ctx, game)
 	require.NoError(t, err)
 
-	return ctx, gameService, playerService, createdGame
+	return ctx, gameService, playerService, userService, createdGame
 }
 
 func TestFindGame(t *testing.T) {
-	ctx, service, _, game := createTestGame(t)
+	ctx, service, _, _, game := createTestGame(t)
 
 	t.Logf("Created game: %+v", game)
 
@@ -41,11 +43,14 @@ func TestFindGame(t *testing.T) {
 }
 
 func TestJoinGame(t *testing.T) {
-    ctx, gameService, playerService, game := createTestGame(t)
+    ctx, gameService, playerService, userService, game := createTestGame(t)
 
     t.Logf("Created game: %+v", game)
+    
+    user, err := userService.SignUp(ctx, "automated_testing_user", "password")
+    require.NoError(t, err)
 
-    player, err := playerService.CreatePlayer(ctx, &model.Player{Name: "TestJoinGamePlayer"})
+    player, err := playerService.CreatePlayer(ctx, user.ID, game.ID)
     require.NoError(t, err)
     updatedGame, err := gameService.JoinGame(ctx, game.ID, player.ID)
 
@@ -57,7 +62,7 @@ func TestJoinGame(t *testing.T) {
 }
 
 func TestStartGame0Players(t *testing.T) {
-	ctx, service, _, game := createTestGame(t)
+	ctx, service, _, _, game := createTestGame(t)
 
 	t.Logf("Created game: %+v", game)
 
@@ -66,13 +71,16 @@ func TestStartGame0Players(t *testing.T) {
 }
 
 func TestStartGame7Players(t *testing.T) {
-	ctx, gameService, playerService, game := createTestGame(t)
+	ctx, gameService, playerService, userService, game := createTestGame(t)
 
 	t.Logf("Created game: %+v", game)
 
     for i := range 7 {
-        playerIDHex := fmt.Sprintf("player-%d", i)
-        player, err := playerService.CreatePlayer(ctx, &model.Player{Name: playerIDHex})
+        username := fmt.Sprintf("automated_testing_user_7playertest_%d", i)
+        user, err := userService.SignUp(ctx, username, "password")
+        require.NoError(t, err)
+
+        player, err := playerService.CreatePlayer(ctx, user.ID, game.ID)
         require.NoError(t, err)
         _, err = gameService.JoinGame(ctx, game.ID, player.ID)
         if err != nil {
@@ -86,13 +94,16 @@ func TestStartGame7Players(t *testing.T) {
 
 
 func TestStartGame3Players(t *testing.T) {
-    ctx, gameService, playerService, game := createTestGame(t)
+    ctx, gameService, playerService, userService, game := createTestGame(t)
 
     t.Logf("Created game: %+v", game)
 
     for i := range 3 {
-        playerIDHex := fmt.Sprintf("player-%d", i)
-        player, err := playerService.CreatePlayer(ctx, &model.Player{Name: playerIDHex})
+        username := fmt.Sprintf("automated_testing_user_3playertest_%d", i)
+        user, err := userService.SignUp(ctx, username, "password")
+        require.NoError(t, err)
+
+        player, err := playerService.CreatePlayer(ctx, user.ID, game.ID)
         require.NoError(t, err)
         _, err = gameService.JoinGame(ctx, game.ID, player.ID)
         if err != nil {

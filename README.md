@@ -36,3 +36,6 @@ DuckDNS used for DNS routing.
 
 `http://blackout-be.duckdns.org:8080/`
 `https://cloud.linode.com/linodes/78840807/metrics`
+
+### Testing
+`go test ./integration`
