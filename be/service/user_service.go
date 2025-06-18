@@ -9,6 +9,7 @@ import (
 
     "github.com/noahsignt/blackout/be/model"
     "github.com/noahsignt/blackout/be/repository"
+	beErrors "github.com/noahsignt/blackout/be/errors"
     "go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -23,7 +24,7 @@ func NewUserService(repo *repository.UserRepo) *UserService {
 func (s *UserService) SignUp(ctx context.Context, username, password string) (*model.User, error) {
     _, err := s.repo.FindByUsername(ctx, username)
     if err == nil {
-        return nil, errors.New("username already taken")
+        return nil, beErrors.ErrDuplicateUsernameOnSignup
     }
 
     hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
