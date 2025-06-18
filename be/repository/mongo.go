@@ -26,14 +26,16 @@ func InitMongo(dbURI string) (*mongo.Client, error) {
     return client, nil
 }
 
-func InitRepos(dbURI string, dbName string) (*GameRepo, *PlayerRepo, error) {
+func InitRepos(dbURI string, dbName string) (*GameRepo, *PlayerRepo, *UserRepo, error) {
     client, err := InitMongo(dbURI)
     if err != nil {
-        return nil, nil, err
+        return nil, nil, nil, err
     }
 
     db := client.Database(dbName)
     gameRepo := NewGameRepo(db)
     playerRepo := NewPlayerRepo(db)
-    return gameRepo, playerRepo, nil
+    UserRepo := NewUserRepo(db)
+
+    return gameRepo, playerRepo, UserRepo, nil
 }

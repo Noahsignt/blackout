@@ -23,11 +23,21 @@ Deployed using CloudFlare Pages.
 ## Backend
 The backend is written in Go. Should mean super performant (spend less $$$ on EC2 instances) for small number of players.
 
+#### Local Dev
+
 ### Starting
 ```bash
 #!/bin/bash
 cd be
 go run main.go
+```
+
+### Database
+```bash
+#!/bin/bash
+mongosh "mongodb://localhost:27017/blackout"
+show collections
+db.users.find().pretty()
 ```
 
 ### Deployment Info
