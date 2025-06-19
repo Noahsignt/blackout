@@ -2,8 +2,8 @@ package service
 
 import (
     "context"
-    "errors"
     "time"
+	"unicode/utf8"
 
     "golang.org/x/crypto/bcrypt"
 
@@ -21,8 +21,31 @@ func NewUserService(repo *repository.UserRepo) *UserService {
     return &UserService{repo: repo}
 }
 
+const (
+	minPasswordLength = 6
+	maxPasswordLength = 15
+)
+
+func validatePasswordLength(password string) error {
+    length := utf8.RuneCountInString(password)
+
+    switch {
+		case length < minPasswordLength:
+			return beErrors.PasswordNotLongEnough
+		case length > maxPasswordLength:
+			return beErrors.PasswordTooLong
+		default:
+			return nil
+    }
+}
+
 func (s *UserService) SignUp(ctx context.Context, username, password string) (*model.User, error) {
-    _, err := s.repo.FindByUsername(ctx, username)
+	err := validatePasswordLength(password)
+	if err != nil {
+		return nil, err
+	}
+
+    _, err = s.repo.FindByUsername(ctx, username)
     if err == nil {
         return nil, beErrors.ErrDuplicateUsernameOnSignup
     }
@@ -41,10 +64,23 @@ func (s *UserService) SignUp(ctx context.Context, username, password string) (*m
     return s.repo.CreateUser(ctx, user)
 }
 
-// You'll need to add FindByID method to repo for this method to work
-func (s *UserService) ChangePassword(ctx context.Context, userID bson.ObjectID, oldPassword, newPassword string) error {
-    // TODO: add FindByID to repo and use here instead of FindByUsername("")
-    return errors.New("ChangePassword requires repo.FindByID - implement first")
+func (s *UserService) ChangePassword(ctx context.Context, userID bson.ObjectID, newPassword string) error {
+	err := validatePasswordLength(newPassword)
+	if err != nil {
+		return err
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+    if err != nil {
+        return err
+    }
+
+	err = s.repo.UpdatePassword(ctx, userID, string(hash))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *UserService) UpdateProfileImage(ctx context.Context, userID bson.ObjectID, imageURL string) error {

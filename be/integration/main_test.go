@@ -13,6 +13,7 @@ import (
     "go.mongodb.org/mongo-driver/v2/mongo/readpref"
     "github.com/testcontainers/testcontainers-go"
     "github.com/testcontainers/testcontainers-go/wait"
+    "github.com/stretchr/testify/require"
 )
 
 var (
@@ -34,6 +35,11 @@ func TestMain(m *testing.M) {
     _ = mongoC.Terminate(ctx)
 
     os.Exit(code)
+}
+
+func SetupTest(t *testing.T) {
+	err := client.Database("testdb").Drop(context.Background())
+	require.NoError(t, err)
 }
 
 

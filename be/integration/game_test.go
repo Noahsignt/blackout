@@ -33,6 +33,7 @@ func createTestGame(t *testing.T) (context.Context, *service.GameService, *servi
 }
 
 func TestFindGame(t *testing.T) {
+    SetupTest(t)
 	ctx, service, _, _, game := createTestGame(t)
 
 	t.Logf("Created game: %+v", game)
@@ -43,6 +44,7 @@ func TestFindGame(t *testing.T) {
 }
 
 func TestJoinGame(t *testing.T) {
+    SetupTest(t)
     ctx, gameService, playerService, userService, game := createTestGame(t)
 
     t.Logf("Created game: %+v", game)
@@ -62,6 +64,7 @@ func TestJoinGame(t *testing.T) {
 }
 
 func TestStartGame0Players(t *testing.T) {
+    SetupTest(t)
 	ctx, service, _, _, game := createTestGame(t)
 
 	t.Logf("Created game: %+v", game)
@@ -71,6 +74,7 @@ func TestStartGame0Players(t *testing.T) {
 }
 
 func TestStartGame7Players(t *testing.T) {
+    SetupTest(t)
 	ctx, gameService, playerService, userService, game := createTestGame(t)
 
 	t.Logf("Created game: %+v", game)
@@ -94,6 +98,7 @@ func TestStartGame7Players(t *testing.T) {
 
 
 func TestStartGame3Players(t *testing.T) {
+    SetupTest(t)
     ctx, gameService, playerService, userService, game := createTestGame(t)
 
     t.Logf("Created game: %+v", game)
