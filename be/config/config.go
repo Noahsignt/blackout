@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	DBUri	string
+	JWTSecret string
 }
 
 func Load() Config {
@@ -18,5 +19,6 @@ func Load() Config {
 
 	return Config {
 		DBUri:	os.Getenv("MONGODB_URI"),
+		JWTSecret: os.Getenv("JWT_SECRET"),
 	}
 }

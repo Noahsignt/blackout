@@ -17,7 +17,7 @@ func createUserService() (context.Context, *repository.UserRepo, *service.UserSe
 	db := client.Database("testdb")
 	userRepo := repository.NewUserRepo(db)
 
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, "automated-testing-secret")
 
 	return ctx, userRepo, userService
 }
@@ -42,10 +42,10 @@ func TestBadPasswords(t *testing.T) {
 
 	username := "automated_testing_testbadpasswords"
 	_, err := userService.SignUp(ctx, username, "1")
-	require.EqualError(t, err, errors.PasswordNotLongEnough.Error())
+	require.EqualError(t, err, errors.ErrPasswordNotLongEnough.Error())
 
 	_, err = userService.SignUp(ctx, username, "123456789101112131415")
-	require.EqualError(t, err, errors.PasswordTooLong.Error())
+	require.EqualError(t, err, errors.ErrPasswordTooLong.Error())
 }
 
 func TestDuplicateUsernames(t *testing.T) {
@@ -58,4 +58,28 @@ func TestDuplicateUsernames(t *testing.T) {
 
 	_, err = userService.SignUp(ctx, username, "password")
 	require.EqualError(t, err, errors.ErrDuplicateUsernameOnSignup.Error())
+}
+
+func TestLogIn(t *testing.T) {
+    SetupTest(t)
+    ctx, _, userService := createUserService()
+
+    username := "automated_testing_testlogin"
+    password := "securepassword"
+
+    _, err := userService.SignUp(ctx, username, password)
+    require.NoError(t, err)
+
+    // Login with user
+    token, err := userService.LogIn(ctx, username, password)
+    require.NoError(t, err)
+    require.NotEmpty(t, token)
+
+    // Login with bad password
+    _, err = userService.LogIn(ctx, username, "wrongpassword")
+    require.EqualError(t, err, errors.ErrPasswordsDontMatch.Error())
+
+    // Login with non-existent user
+    _, err = userService.LogIn(ctx, "nonexistent_user_abcdef", "any_password")
+    require.Error(t, err)
 }

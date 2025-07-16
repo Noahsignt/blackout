@@ -23,7 +23,7 @@ func createTestGame(t *testing.T) (context.Context, *service.GameService, *servi
 
     playerService := service.NewPlayerService(playerRepo)
 	gameService := service.NewGameService(gameRepo, playerService)
-    userService := service.NewUserService(userRepo)
+    userService := service.NewUserService(userRepo, "automated-testing-secret")
 
 	game := &model.Game{}
 	createdGame, err := gameService.CreateGame(ctx, game)

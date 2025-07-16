@@ -24,7 +24,7 @@ func main() {
     // -- Services --
     playerService := service.NewPlayerService(playerRepo)
     gameService := service.NewGameService(gameRepo, playerService)
-    userService := service.NewUserService(userRepo)
+    userService := service.NewUserService(userRepo, ctx.JWTSecret)
 
     // -- Router --
     router := handler.NewRouter(*gameService, *userService)

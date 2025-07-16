@@ -11,14 +11,16 @@ import (
     "github.com/noahsignt/blackout/be/repository"
 	beErrors "github.com/noahsignt/blackout/be/errors"
     "go.mongodb.org/mongo-driver/v2/bson"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type UserService struct {
     repo *repository.UserRepo
+	jwtSecret string
 }
 
-func NewUserService(repo *repository.UserRepo) *UserService {
-    return &UserService{repo: repo}
+func NewUserService(repo *repository.UserRepo, jwtSecret string) *UserService {
+    return &UserService{repo: repo, jwtSecret: jwtSecret}
 }
 
 const (
@@ -31,9 +33,9 @@ func validatePasswordLength(password string) error {
 
     switch {
 		case length < minPasswordLength:
-			return beErrors.PasswordNotLongEnough
+			return beErrors.ErrPasswordNotLongEnough
 		case length > maxPasswordLength:
-			return beErrors.PasswordTooLong
+			return beErrors.ErrPasswordTooLong
 		default:
 			return nil
     }
@@ -85,4 +87,31 @@ func (s *UserService) ChangePassword(ctx context.Context, userID bson.ObjectID, 
 
 func (s *UserService) UpdateProfileImage(ctx context.Context, userID bson.ObjectID, imageURL string) error {
     return s.repo.UpdateImage(ctx, userID, imageURL)
+}
+
+func (s *UserService) LogIn(ctx context.Context, username, password string) (string, error) {
+	user, err := s.repo.FindByUsername(ctx, username)
+	if(err != nil) {	
+		return "", err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	if(err != nil) {
+		return "", beErrors.ErrPasswordsDontMatch
+	}
+
+	keyBytes := []byte(s.jwtSecret)
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256,
+		jwt.MapClaims{ // claims are pieces of information related to user encoded in the token
+			"sub": user.ID.Hex(),
+			"username": username,
+			"exp":      time.Now().Add(24 * time.Hour).Unix(), // lasts 24 hours
+		})
+
+	signed, err := t.SignedString(keyBytes)
+	if(err != nil) {
+		return "", err
+	}
+
+	return signed, nil
 }
