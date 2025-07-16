@@ -4,6 +4,9 @@ import (
     "context"
     "time"
 	"unicode/utf8"
+	"net/http"
+	"strings"
+	"fmt"
 
     "golang.org/x/crypto/bcrypt"
 
@@ -14,13 +17,16 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type contextKey string
+const UserClaimsKey contextKey = "userClaims"
+
 type UserService struct {
     repo *repository.UserRepo
-	jwtSecret string
+	JwtSecret string
 }
 
 func NewUserService(repo *repository.UserRepo, jwtSecret string) *UserService {
-    return &UserService{repo: repo, jwtSecret: jwtSecret}
+    return &UserService{repo: repo, JwtSecret: jwtSecret}
 }
 
 const (
@@ -100,7 +106,7 @@ func (s *UserService) LogIn(ctx context.Context, username, password string) (str
 		return "", beErrors.ErrPasswordsDontMatch
 	}
 
-	keyBytes := []byte(s.jwtSecret)
+	keyBytes := []byte(s.JwtSecret)
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{ // claims are pieces of information related to user encoded in the token
 			"sub": user.ID.Hex(),
@@ -114,4 +120,54 @@ func (s *UserService) LogIn(ctx context.Context, username, password string) (str
 	}
 
 	return signed, nil
+}
+
+func (s *UserService) ParseAndValidateToken(tokenString string) (jwt.MapClaims, error) {
+	// parse header, payload and signature and ensure signature matches token signed with this secret
+    token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+            return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+        }
+        return []byte(s.JwtSecret), nil
+    })
+
+    if err != nil {
+        return nil, err
+    }
+
+    claims, ok := token.Claims.(jwt.MapClaims)
+    if !ok || !token.Valid {
+        return nil, fmt.Errorf("invalid token")
+    }
+
+    return claims, nil
+}
+
+
+func (s *UserService) AuthMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        authHeader := r.Header.Get("Authorization")
+        if authHeader == "" {
+            http.Error(w, "missing Authorization header", http.StatusUnauthorized)
+            return
+        }
+
+		// token looks like Bearer: {TOKEN} -> split into 2 and take the second
+        parts := strings.SplitN(authHeader, " ", 2)
+        if len(parts) != 2 || parts[0] != "Bearer" {
+            http.Error(w, "invalid Authorization header format", http.StatusUnauthorized)
+            return
+        }
+
+		// parse the token
+        claims, err := s.ParseAndValidateToken(parts[1])
+        if err != nil {
+            http.Error(w, "invalid token", http.StatusUnauthorized)
+            return
+        }
+
+        // embed claims in context
+        ctx := context.WithValue(r.Context(), UserClaimsKey, claims)
+        next.ServeHTTP(w, r.WithContext(ctx))
+    })
 }

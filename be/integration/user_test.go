@@ -70,16 +70,16 @@ func TestLogIn(t *testing.T) {
     _, err := userService.SignUp(ctx, username, password)
     require.NoError(t, err)
 
-    // Login with user
+    // login with user
     token, err := userService.LogIn(ctx, username, password)
     require.NoError(t, err)
     require.NotEmpty(t, token)
 
-    // Login with bad password
+    // login with bad password
     _, err = userService.LogIn(ctx, username, "wrongpassword")
     require.EqualError(t, err, errors.ErrPasswordsDontMatch.Error())
 
-    // Login with non-existent user
+    // login with non-existent user
     _, err = userService.LogIn(ctx, "nonexistent_user_abcdef", "any_password")
     require.Error(t, err)
 }
