@@ -15,6 +15,7 @@ func NewRouter(gameService service.GameService, userService service.UserService)
 
     // unprotected routes
     r.Post("/users/signup", userHandler.SignUp)
+    r.Post("/usesrs/login", userHandler.Login)
 
     // Game routes
     r.Get("/game/{id}", gameHandler.GetGameByID)

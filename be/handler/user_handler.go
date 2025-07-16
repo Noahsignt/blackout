@@ -18,7 +18,7 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 }
 
 // DTOs
-type signUpRequest struct {
+type authRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
@@ -27,6 +27,10 @@ type signUpResponse struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
 	Created  string `json:"createdAt"`
+}
+
+type loginResponse struct {
+	AuthString string `json:"authString"`
 }
 
 type changePasswordRequest struct {
@@ -39,7 +43,7 @@ type updateImageRequest struct {
 
 // POST /users/signup
 func (h *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
-	var req signUpRequest
+	var req authRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
@@ -58,6 +62,29 @@ func (h *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
+// POST /users/login
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	// check username and password provided
+	var req authRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	authString, err := h.userService.LogIn(r.Context(), req.Username, req.Password)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	resp := loginResponse{
+		AuthString: authString,
+	}
+
+	w.Header().Set("Content-Type", "application.json")
 	json.NewEncoder(w).Encode(resp)
 }
 

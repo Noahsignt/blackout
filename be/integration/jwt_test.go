@@ -61,4 +61,3 @@ func TestAuthMiddleware(t *testing.T) {
     require.Equal(t, http.StatusOK, resp.Code)
     require.Equal(t, "testuser", strings.TrimSpace(resp.Body.String()))
 }
-
