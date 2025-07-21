@@ -27,7 +27,7 @@ func main() {
     userService := service.NewUserService(userRepo, ctx.JWTSecret)
 
     // -- Router --
-    router := handler.NewRouter(*gameService, *userService)
+    router := handler.NewRouter(ctx, *gameService, *userService)
     log.Printf("✅ Server started successfully at %s", time.Now().Format(time.RFC3339))
     if err := http.ListenAndServe(":8080", router); err != nil {
         log.Fatal(err)

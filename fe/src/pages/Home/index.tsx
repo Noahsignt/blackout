@@ -1,21 +1,94 @@
 import { useState } from 'react';
+import { isAuthenticated } from '../../api/util';
+import { signUp, login } from '../../api/auth';
+import type { SignUpResponse, LoginResponse } from '../../types/auth';
 
 export default function BlackoutInterface() {
   const [activeTab, setActiveTab] = useState('login');
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [registerForm, setRegisterForm] = useState({ username: '', email: '', password: '', confirmPassword: '' });
   const [gameForm, setGameForm] = useState({ gameName: '' });
+  
+  // loading / error states
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  const handleLogin = () => {
-    console.log('Logging in:', loginForm);
+  // clear all messages when switching tabs
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setError(null);
+    setSuccess(null);
   };
 
-  const handleRegister = () => {
-    console.log('Registering:', registerForm);
+  const handleLogin = async () => {
+    if (!loginForm.username || !loginForm.password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const response: LoginResponse = await login(loginForm.username, loginForm.password);
+      setSuccess('Login successful!');
+      setLoginForm({ username: '', password: '' });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegister = async () => {
+    if (!registerForm.username || !registerForm.password || !registerForm.confirmPassword) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    if (registerForm.password !== registerForm.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (registerForm.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const response: SignUpResponse = await signUp(registerForm.username, registerForm.password);
+      setSuccess('Registration successful! You can now log in.');
+      setRegisterForm({ username: '', email: '', password: '', confirmPassword: '' });
+      setActiveTab('login');
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Registration failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCreateGame = () => {
+    if (!isAuthenticated()) {
+      setError('Please log in to create a game');
+      return;
+    }
+
+    if (!gameForm.gameName.trim()) {
+      setError('Please enter a game name');
+      return;
+    }
+
     console.log('Creating game:', gameForm);
+    // TODO: Implement game creation API call
+    setSuccess('Game creation feature coming soon!');
   };
 
   return (
@@ -52,13 +125,26 @@ export default function BlackoutInterface() {
           </div>
         </div>
 
+        {/* Error/Success Messages */}
+        {(error || success) && (
+          <div className="max-w-sm mx-auto mb-6">
+            <div className={`p-3 border-2 ${
+              error 
+                ? 'bg-red-900/50 border-red-600 text-red-200' 
+                : 'bg-green-900/50 border-green-600 text-green-200'
+            } font-mono text-sm`}>
+              {error || success}
+            </div>
+          </div>
+        )}
+
         {/* Weathered tab bar */}
         <div className="flex justify-center mb-8">
           <div className="bg-stone-800 border-2 border-stone-600 shadow-inner">
             {['login', 'register', 'create'].map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => handleTabChange(tab)}
                 className={`px-6 py-3 text-xs uppercase tracking-wider font-mono border-r-2 border-stone-600 last:border-r-0 transition-colors ${
                   activeTab === tab
                     ? 'bg-stone-600 text-stone-100'
@@ -95,7 +181,8 @@ export default function BlackoutInterface() {
                         type="text"
                         value={loginForm.username}
                         onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
-                        className="w-full px-3 py-2 bg-stone-700 text-stone-200 border border-stone-600 focus:border-stone-500 focus:outline-none font-mono text-sm"
+                        disabled={isLoading}
+                        className="w-full px-3 py-2 bg-stone-700 text-stone-200 border border-stone-600 focus:border-stone-500 focus:outline-none font-mono text-sm disabled:opacity-50"
                       />
                     </div>
                     <div>
@@ -106,14 +193,16 @@ export default function BlackoutInterface() {
                         type="password"
                         value={loginForm.password}
                         onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
-                        className="w-full px-3 py-2 bg-stone-700 text-stone-200 border border-stone-600 focus:border-stone-500 focus:outline-none font-mono text-sm"
+                        disabled={isLoading}
+                        className="w-full px-3 py-2 bg-stone-700 text-stone-200 border border-stone-600 focus:border-stone-500 focus:outline-none font-mono text-sm disabled:opacity-50"
                       />
                     </div>
                     <button
                       onClick={handleLogin}
-                      className="w-full bg-stone-600 hover:bg-stone-500 text-stone-100 font-black py-3 uppercase tracking-wider text-sm transition-colors font-mono border border-stone-500"
+                      disabled={isLoading}
+                      className="w-full bg-stone-600 hover:bg-stone-500 text-stone-100 font-black py-3 uppercase tracking-wider text-sm transition-colors font-mono border border-stone-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      IN
+                      {isLoading ? 'ENTERING...' : 'IN'}
                     </button>
                   </div>
                 </div>
@@ -134,7 +223,8 @@ export default function BlackoutInterface() {
                         type="text"
                         value={registerForm.username}
                         onChange={(e) => setRegisterForm({...registerForm, username: e.target.value})}
-                        className="w-full px-3 py-2 bg-stone-700 text-stone-200 border border-stone-600 focus:border-stone-500 focus:outline-none font-mono text-sm"
+                        disabled={isLoading}
+                        className="w-full px-3 py-2 bg-stone-700 text-stone-200 border border-stone-600 focus:border-stone-500 focus:outline-none font-mono text-sm disabled:opacity-50"
                       />
                     </div>
                     <div>
@@ -145,7 +235,8 @@ export default function BlackoutInterface() {
                         type="email"
                         value={registerForm.email}
                         onChange={(e) => setRegisterForm({...registerForm, email: e.target.value})}
-                        className="w-full px-3 py-2 bg-stone-700 text-stone-200 border border-stone-600 focus:border-stone-500 focus:outline-none font-mono text-sm"
+                        disabled={isLoading}
+                        className="w-full px-3 py-2 bg-stone-700 text-stone-200 border border-stone-600 focus:border-stone-500 focus:outline-none font-mono text-sm disabled:opacity-50"
                       />
                     </div>
                     <div>
@@ -156,7 +247,8 @@ export default function BlackoutInterface() {
                         type="password"
                         value={registerForm.password}
                         onChange={(e) => setRegisterForm({...registerForm, password: e.target.value})}
-                        className="w-full px-3 py-2 bg-stone-700 text-stone-200 border border-stone-600 focus:border-stone-500 focus:outline-none font-mono text-sm"
+                        disabled={isLoading}
+                        className="w-full px-3 py-2 bg-stone-700 text-stone-200 border border-stone-600 focus:border-stone-500 focus:outline-none font-mono text-sm disabled:opacity-50"
                       />
                     </div>
                     <div>
@@ -167,14 +259,16 @@ export default function BlackoutInterface() {
                         type="password"
                         value={registerForm.confirmPassword}
                         onChange={(e) => setRegisterForm({...registerForm, confirmPassword: e.target.value})}
-                        className="w-full px-3 py-2 bg-stone-700 text-stone-200 border border-stone-600 focus:border-stone-500 focus:outline-none font-mono text-sm"
+                        disabled={isLoading}
+                        className="w-full px-3 py-2 bg-stone-700 text-stone-200 border border-stone-600 focus:border-stone-500 focus:outline-none font-mono text-sm disabled:opacity-50"
                       />
                     </div>
                     <button
                       onClick={handleRegister}
-                      className="w-full bg-stone-600 hover:bg-stone-500 text-stone-100 font-black py-3 uppercase tracking-wider text-sm transition-colors font-mono border border-stone-500"
+                      disabled={isLoading}
+                      className="w-full bg-stone-600 hover:bg-stone-500 text-stone-100 font-black py-3 uppercase tracking-wider text-sm transition-colors font-mono border border-stone-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      JOIN
+                      {isLoading ? 'JOINING...' : 'JOIN'}
                     </button>
                   </div>
                 </div>

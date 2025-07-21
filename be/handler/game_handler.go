@@ -14,8 +14,8 @@ type GameHandler struct {
     gameService *service.GameService
 }
 
-func NewGameHandler(gameService service.GameService) *GameHandler {
-	return &GameHandler{&gameService}
+func NewGameHandler(gameService *service.GameService) *GameHandler {
+	return &GameHandler{gameService}
 }
 
 // DTO for binary IDs
