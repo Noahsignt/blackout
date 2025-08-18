@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { isAuthenticated } from '../../api/util';
-import { signUp, login } from '../../api/auth';
-import { createGame } from '../../api/game';
-import type { SignUpResponse, LoginResponse } from '../../types/auth';
-import type { CreateGameResponse } from '../../types/game';
+import {
+  handleLogin,
+  handleRegister,
+  handleCreateGame,
+  type LoginForm,
+  type RegisterForm,
+  type GameForm
+} from './handlers';
 
 export default function BlackoutInterface() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('login');
-  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
-  const [registerForm, setRegisterForm] = useState({ username: '', email: '', password: '', confirmPassword: '' });
-  const [gameForm, setGameForm] = useState({ gameName: '' });
+  const [loginForm, setLoginForm] = useState<LoginForm>({ username: '', password: '' });
+  const [registerForm, setRegisterForm] = useState<RegisterForm>({ username: '', email: '', password: '', confirmPassword: '' });
+  const [gameForm, setGameForm] = useState<GameForm>({ gameName: '' });
   
   // loading / error states
   const [isLoading, setIsLoading] = useState(false);
@@ -25,87 +28,32 @@ export default function BlackoutInterface() {
     setSuccess(null);
   };
 
-  const handleLogin = async () => {
-    if (!loginForm.username || !loginForm.password) {
-      setError('Please fill in all fields');
-      return;
-    }
+  // Handler functions using extracted handlers
+  const onLogin = () => handleLogin({
+    loginForm,
+    setLoginForm,
+    setIsLoading,
+    setError,
+    setSuccess
+  });
 
-    setIsLoading(true);
-    setError(null);
-    setSuccess(null);
+  const onRegister = () => handleRegister({
+    registerForm,
+    setRegisterForm,
+    setIsLoading,
+    setError,
+    setSuccess,
+    setActiveTab
+  });
 
-    try {
-      const response: LoginResponse = await login(loginForm.username, loginForm.password);
-      setSuccess('Login successful!');
-      setLoginForm({ username: '', password: '' });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRegister = async () => {
-    if (!registerForm.username || !registerForm.password || !registerForm.confirmPassword) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    if (registerForm.password !== registerForm.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (registerForm.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      const response: SignUpResponse = await signUp(registerForm.username, registerForm.password);
-      setSuccess('Registration successful! You can now log in.');
-      setRegisterForm({ username: '', email: '', password: '', confirmPassword: '' });
-      setActiveTab('login');
-      
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCreateGame = async () => {
-    if (!isAuthenticated()) {
-      setError('Please log in to create a game');
-      return;
-    }
-
-    if (!gameForm.gameName.trim()) {
-      setError('Please enter a game name');
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      // For now, create a game with 10 rounds (this could be made configurable)
-      const response: CreateGameResponse = await createGame({ numRounds: 10 });
-      setGameForm({ gameName: '' });
-      // Redirect to the game page
-      navigate(`/game/${response.id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create game');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const onCreateGame = () => handleCreateGame({
+    gameForm,
+    setGameForm,
+    setIsLoading,
+    setError,
+    setSuccess,
+    navigate
+  });
 
   return (
     <div className="min-h-screen bg-stone-700 relative">
@@ -214,7 +162,7 @@ export default function BlackoutInterface() {
                       />
                     </div>
                     <button
-                      onClick={handleLogin}
+                      onClick={onLogin}
                       disabled={isLoading}
                       className="w-full bg-stone-600 hover:bg-stone-500 text-stone-100 font-black py-3 uppercase tracking-wider text-sm transition-colors font-mono border border-stone-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -280,7 +228,7 @@ export default function BlackoutInterface() {
                       />
                     </div>
                     <button
-                      onClick={handleRegister}
+                      onClick={onRegister}
                       disabled={isLoading}
                       className="w-full bg-stone-600 hover:bg-stone-500 text-stone-100 font-black py-3 uppercase tracking-wider text-sm transition-colors font-mono border border-stone-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -309,7 +257,7 @@ export default function BlackoutInterface() {
                       />
                     </div>
                     <button
-                      onClick={handleCreateGame}
+                      onClick={onCreateGame}
                       className="w-full bg-stone-600 hover:bg-stone-500 text-stone-100 font-black py-3 uppercase tracking-wider text-sm transition-colors font-mono border border-stone-500"
                     >
                       START
