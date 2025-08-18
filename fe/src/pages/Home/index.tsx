@@ -1,9 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { isAuthenticated } from '../../api/util';
 import { signUp, login } from '../../api/auth';
+import { createGame } from '../../api/game';
 import type { SignUpResponse, LoginResponse } from '../../types/auth';
+import type { CreateGameResponse } from '../../types/game';
 
 export default function BlackoutInterface() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('login');
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [registerForm, setRegisterForm] = useState({ username: '', email: '', password: '', confirmPassword: '' });
@@ -75,7 +79,7 @@ export default function BlackoutInterface() {
     }
   };
 
-  const handleCreateGame = () => {
+  const handleCreateGame = async () => {
     if (!isAuthenticated()) {
       setError('Please log in to create a game');
       return;
@@ -86,9 +90,21 @@ export default function BlackoutInterface() {
       return;
     }
 
-    console.log('Creating game:', gameForm);
-    // TODO: Implement game creation API call
-    setSuccess('Game creation feature coming soon!');
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      // For now, create a game with 10 rounds (this could be made configurable)
+      const response: CreateGameResponse = await createGame({ numRounds: 10 });
+      setGameForm({ gameName: '' });
+      // Redirect to the game page
+      navigate(`/game/${response.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create game');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

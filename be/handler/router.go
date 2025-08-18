@@ -28,6 +28,7 @@ func NewRouter(ctx config.Config, gameService service.GameService, userService s
         // game routes
         api.Get("/game/{id}", gameHandler.GetGameByID)
         api.Post("/game", gameHandler.CreateGame)
+        api.Post("/game/{id}/start", gameHandler.StartGame)
 
         // user routes
         api.Post("/users/{id}/password", userHandler.ChangePassword)

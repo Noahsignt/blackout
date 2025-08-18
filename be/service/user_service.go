@@ -98,7 +98,7 @@ func (s *UserService) UpdateProfileImage(ctx context.Context, userID bson.Object
 func (s *UserService) LogIn(ctx context.Context, username, password string) (string, error) {
 	user, err := s.repo.FindByUsername(ctx, username)
 	if(err != nil) {	
-		return "", err
+		return "", beErrors.ErrUserNotFound
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))

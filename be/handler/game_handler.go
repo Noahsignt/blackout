@@ -80,3 +80,24 @@ func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(gameToResponse(createdGame))
 }
+
+// POST /game/{id}/start
+func (h *GameHandler) StartGame(w http.ResponseWriter, r *http.Request) {
+    ctx := r.Context()
+    idStr := chi.URLParam(r, "id")
+
+    oid, err := bson.ObjectIDFromHex(idStr)
+    if err != nil {
+        http.Error(w, "Invalid game ID", http.StatusBadRequest)
+        return
+    }
+
+    startedGame, err := h.gameService.StartGame(ctx, oid)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(gameToResponse(startedGame))
+}
