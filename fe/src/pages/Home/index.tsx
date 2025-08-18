@@ -4,9 +4,11 @@ import {
   handleLogin,
   handleRegister,
   handleCreateGame,
+  handleJoinGame,
   type LoginForm,
   type RegisterForm,
-  type GameForm
+  type GameForm,
+  type JoinGameForm
 } from './handlers';
 
 export default function BlackoutInterface() {
@@ -15,6 +17,7 @@ export default function BlackoutInterface() {
   const [loginForm, setLoginForm] = useState<LoginForm>({ username: '', password: '' });
   const [registerForm, setRegisterForm] = useState<RegisterForm>({ username: '', email: '', password: '', confirmPassword: '' });
   const [gameForm, setGameForm] = useState<GameForm>({ gameName: '' });
+  const [joinGameForm, setJoinGameForm] = useState<JoinGameForm>({ gameId: '' });
   
   // loading / error states
   const [isLoading, setIsLoading] = useState(false);
@@ -49,6 +52,15 @@ export default function BlackoutInterface() {
   const onCreateGame = () => handleCreateGame({
     gameForm,
     setGameForm,
+    setIsLoading,
+    setError,
+    setSuccess,
+    navigate
+  });
+
+  const onJoinGame = () => handleJoinGame({
+    joinGameForm,
+    setJoinGameForm,
     setIsLoading,
     setError,
     setSuccess,
@@ -105,7 +117,7 @@ export default function BlackoutInterface() {
         {/* Weathered tab bar */}
         <div className="flex justify-center mb-8">
           <div className="bg-stone-800 border-2 border-stone-600 shadow-inner">
-            {['login', 'register', 'create'].map((tab) => (
+            {['login', 'register', 'create', 'join'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => handleTabChange(tab)}
@@ -115,7 +127,7 @@ export default function BlackoutInterface() {
                     : 'text-stone-400 hover:text-stone-200 hover:bg-stone-700'
                 }`}
               >
-                {tab === 'create' ? 'NEW GAME' : tab}
+                {tab === 'create' ? 'NEW GAME' : tab === 'join' ? 'JOIN GAME' : tab}
               </button>
             ))}
           </div>
@@ -261,6 +273,36 @@ export default function BlackoutInterface() {
                       className="w-full bg-stone-600 hover:bg-stone-500 text-stone-100 font-black py-3 uppercase tracking-wider text-sm transition-colors font-mono border border-stone-500"
                     >
                       START
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Join Game */}
+              {activeTab === 'join' && (
+                <div>
+                  <h2 className="text-lg font-black text-stone-200 mb-6 uppercase tracking-wide font-mono">
+                    JOIN GAME
+                  </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-stone-400 text-xs uppercase tracking-wider mb-1 font-mono">
+                        Game ID
+                      </label>
+                      <input
+                        type="text"
+                        value={joinGameForm.gameId}
+                        onChange={(e) => setJoinGameForm({...joinGameForm, gameId: e.target.value})}
+                        disabled={isLoading}
+                        className="w-full px-3 py-2 bg-stone-700 text-stone-200 border border-stone-600 focus:border-stone-500 focus:outline-none font-mono text-sm disabled:opacity-50"
+                      />
+                    </div>
+                    <button
+                      onClick={onJoinGame}
+                      disabled={isLoading}
+                      className="w-full bg-stone-600 hover:bg-stone-500 text-stone-100 font-black py-3 uppercase tracking-wider text-sm transition-colors font-mono border border-stone-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? 'JOINING...' : 'JOIN'}
                     </button>
                   </div>
                 </div>

@@ -27,8 +27,26 @@ export default function GamePage() {
 
   return (
     <div className="min-h-screen bg-stone-700 relative">
-      {/* Background styling similar to home page */}
+      {/* Dingy concrete wall texture */}
       <div className="absolute inset-0 bg-gradient-to-br from-stone-600 via-stone-700 to-stone-800"></div>
+      
+      {/* Water stains and discoloration */}
+      <div className="absolute inset-0" style={{
+        backgroundImage: `
+          radial-gradient(ellipse at 20% 30%, rgba(120, 113, 108, 0.4) 0%, transparent 60%),
+          radial-gradient(ellipse at 80% 10%, rgba(87, 83, 81, 0.3) 0%, transparent 50%),
+          radial-gradient(ellipse at 60% 80%, rgba(168, 162, 158, 0.2) 0%, transparent 40%)
+        `,
+        backgroundSize: '400px 300px, 300px 200px, 500px 400px'
+      }}></div>
+      
+      {/* Flickering fluorescent light effect */}
+      <div className="absolute top-0 left-1/4 right-1/4 h-2 bg-gradient-to-r from-transparent via-stone-300 to-transparent opacity-30"></div>
+      
+      {/* Cigarette smoke trails */}
+      <div className="absolute top-1/3 left-1/4 w-px h-16 bg-gradient-to-t from-stone-400 to-transparent opacity-40 blur-sm"></div>
+      <div className="absolute top-2/3 right-1/3 w-px h-12 bg-gradient-to-t from-stone-500 to-transparent opacity-30 blur-sm"></div>
+      <div className="absolute bottom-1/4 left-2/3 w-px h-8 bg-gradient-to-t from-stone-400 to-transparent opacity-35 blur-sm"></div>
       
       <div className="relative z-10 container mx-auto px-6 py-12">
         <div className="text-center mb-12">

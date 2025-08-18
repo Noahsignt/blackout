@@ -1,6 +1,6 @@
 import { NavigateFunction } from 'react-router-dom';
 import { isAuthenticated } from '../../../api/util';
-import { createGame } from '../../../api/game';
+import { createGame, joinGame } from '../../../api/game';
 import type { CreateGameResponse } from '../../../types/game';
 
 export interface GameForm {
@@ -39,9 +39,10 @@ export const handleCreateGame = async ({
   setSuccess(null);
 
   try {
-    // For now, create a game with 10 rounds (this could be made configurable)
     const response: CreateGameResponse = await createGame({ numRounds: 10 });
     setGameForm({ gameName: '' });
+
+    await joinGame(response.id);
     // Redirect to the game page
     navigate(`/game/${response.id}`);
   } catch (err) {

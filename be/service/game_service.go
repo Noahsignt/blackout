@@ -34,29 +34,29 @@ func (s *GameService) GetGameByID(ctx context.Context, id bson.ObjectID) (*model
 	return game, nil
 }
 
-func (s *GameService) JoinGame(ctx context.Context, id bson.ObjectID, pid bson.ObjectID) (*model.Game, error) {
-	game, err := s.gameRepo.GetGameByID(ctx, id)
+func (s *GameService) JoinGame(ctx context.Context, gameID bson.ObjectID, userID bson.ObjectID) (*model.Game, error) {
+	game, err := s.gameRepo.GetGameByID(ctx, gameID)
 
 	if err != nil {
 		return nil, stdErrors.New("could not find game")
 	}
 
-	// no duplicate players over id
+	// check if user is already in the game
 	for _, p := range game.Players {
-		if p.ID == pid {
-			return nil, fmt.Errorf("player with ID %s already exists", pid)
+		if p.UserID == userID {
+			return nil, fmt.Errorf("user with ID %s is already in this game", userID.Hex())
 		}
 	}
 
-    // try and find player
-    player, err := s.playerService.GetPlayerByID(ctx, pid)
+    // create a new player for this user in this game
+    player, err := s.playerService.CreatePlayer(ctx, userID, gameID)
 
     if err != nil {
-        return nil, stdErrors.New("could not find player associated with id")
+        return nil, fmt.Errorf("could not create player: %w", err)
     }
 
     game.Players = append(game.Players, *player)
-    updatedGame, err := s.gameRepo.PutGame(ctx, id, *game)
+    updatedGame, err := s.gameRepo.PutGame(ctx, gameID, *game)
 
     if err != nil {
         return nil, stdErrors.New("could not update game with new player")
@@ -64,7 +64,6 @@ func (s *GameService) JoinGame(ctx context.Context, id bson.ObjectID, pid bson.O
 
     return updatedGame, nil
 }
-
 func (s *GameService) CreateGame(ctx context.Context, game *model.Game) (*model.Game, error) {
 	if game == nil {
 		return nil, stdErrors.New("game is nil")
