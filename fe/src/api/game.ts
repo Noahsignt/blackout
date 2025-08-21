@@ -22,3 +22,9 @@ export const startGame = (gameId: string): Promise<StartGameResponse> => {
         method: 'POST'
     });
 }
+
+export const getGame = (gameId: string): Promise<GameResponse> => {
+    return authenticatedRequest(`/api/game/${gameId}`, {
+        method: 'GET'
+    });
+}

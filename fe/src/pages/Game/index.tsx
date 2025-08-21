@@ -1,13 +1,39 @@
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { startGame } from '../../api/game';
-import type { GameResponse } from '../../types/game';
+import { startGame, getGame } from '../../api/game';
+import { useNavigate } from 'react-router-dom';
+import type { GameResponse, Player } from '../../types/game';
 
 export default function GamePage() {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [game, setGame] = useState<GameResponse | null>(null);
+  const [players, setPlayers] = useState<Array<Player>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if(!id) {
+      navigate('/');
+      return;
+    }
+  
+    const fetchGame = async () => {
+      try {
+        const gameData = await getGame(id!);
+        // setGame(gameData);
+        setPlayers(gameData.players);
+      } catch (err) {
+        console.error(err);
+        setError('Failed to fetch game data');
+      }
+    };
+
+    fetchGame();
+    
+    const pollInterval = setInterval(fetchGame, 5000);
+    return () => clearInterval(pollInterval);
+  }, [id, navigate])
 
   const handleStartGame = async () => {
     if (!id) return;
@@ -80,6 +106,36 @@ export default function GamePage() {
                 <div>Players: {game.players.length}</div>
                 <div>Current Turn: Player {game.round.hand.turn + 1}</div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Players List */}
+        {!game && (
+          <div className="max-w-sm mx-auto mb-8">
+            <div className="bg-stone-800 border-2 border-stone-600 shadow-2xl p-6">
+              <h2 className="text-lg font-black text-stone-200 mb-4 uppercase tracking-wide font-mono">
+                Players ({players.length})
+              </h2>
+              {players.length > 0 ? (
+                <div className="space-y-2">
+                  {players.map((player, index) => (
+                    <div
+                      key={player.id}
+                      className="bg-stone-700 border border-stone-600 p-3 text-stone-300 font-mono text-sm"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span>{player.name}</span>
+                        <span className="text-stone-500">#{index + 1}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-stone-400 font-mono text-sm text-center py-4">
+                  No players yet...
+                </div>
+              )}
             </div>
           </div>
         )}

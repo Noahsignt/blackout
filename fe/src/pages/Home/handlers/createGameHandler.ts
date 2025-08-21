@@ -43,7 +43,8 @@ export const handleCreateGame = async ({
     setGameForm({ gameName: '' });
 
     await joinGame(response.id);
-    // Redirect to the game page
+
+    // redirect to the game page
     navigate(`/game/${response.id}`);
   } catch (err) {
     setError(err instanceof Error ? err.message : 'Failed to create game');

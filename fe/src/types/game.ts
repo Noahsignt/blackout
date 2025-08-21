@@ -3,6 +3,11 @@ export interface CreateGameRequest {
     numRounds: number;
 }
 
+export interface Player {
+    id: string;
+    name: string;
+}
+
 export interface GameResponse {
     id: string;
     numRounds: number;
@@ -12,10 +17,7 @@ export interface GameResponse {
             turn: number;
         };
     };
-    players: Array<{
-        id: string;
-        name: string;
-    }>;
+    players: Array<Player>;
 }
 
 export type CreateGameResponse = GameResponse;

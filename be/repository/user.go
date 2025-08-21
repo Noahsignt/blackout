@@ -44,6 +44,21 @@ func (r *UserRepo) FindByUsername(ctx context.Context, username string) (*model.
     return &user, nil
 }
 
+func (r *UserRepo) FindByID(ctx context.Context, userID bson.ObjectID) (*model.User, error) {
+    filter := bson.M{"_id": userID}
+    res := r.collection.FindOne(ctx, filter)
+
+    var user model.User
+    if err := res.Decode(&user); err != nil {
+        if err == mongo.ErrNoDocuments {
+            return nil, fmt.Errorf("user not found")
+        }
+        return nil, err
+    }
+
+    return &user, nil
+}
+
 func (r *UserRepo) UpdatePassword(ctx context.Context, userID bson.ObjectID, newHash string) error {
     filter := bson.M{"_id": userID}
     update := bson.M{"$set": bson.M{"password_hash": newHash}}
