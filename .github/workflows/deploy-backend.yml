@@ -1,0 +1,30 @@
+name: SSH Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: SSH-SCP-SSH Pipeline
+        uses: kangketikonlen/ssh-pipeline@v0.0.3
+        with:
+          host: 45.79.238.157
+          user: root
+          pass: ${{ secrets.SERVER_PASSWORD }}
+          known_hosts: ${{ secrets.SERVER_KNOWN_HOSTS }}
+          last_ssh: |
+            cd /root/blackout/be
+            git reset --hard
+            git pull
+            /usr/local/go/bin/go build -o server .
+            systemctl daemon-reload
+            systemctl restart blackout
+            systemctl status blackout --no-pager --lines=20
+
