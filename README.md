@@ -44,8 +44,13 @@ db.users.find().pretty()
 Deployed using an Akamai Nanode. Simple, cheap Virtual Private Server solution. Systemd used to boot the Go server up.
 DuckDNS used for DNS routing.
 
+#### Important Links
 `http://blackout-be.duckdns.org:8080/`
 `https://cloud.linode.com/linodes/78840807/metrics`
+
+#### CI/CD
+GitHub Actions is used for automated deployment.
+Workflow SSHs in, pulls the merged code from main, rebuilds the Go binary and then restarts the server (managed via systemd).
 
 ### Testing
 `go test ./integration`
