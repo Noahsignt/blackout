@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -13,26 +14,50 @@ import (
 
 type GameHandler struct {
 	gameService *service.GameService
+	userService *service.UserService
 }
 
-func NewGameHandler(gameService *service.GameService) *GameHandler {
-	return &GameHandler{gameService}
+func NewGameHandler(gameService *service.GameService, userService *service.UserService) *GameHandler {
+	return &GameHandler{gameService, userService}
 }
 
 // DTO for binary IDs
-type gameResponse struct {
-	ID        string         `json:"id"`
-	NumRounds int            `json:"numRounds"`
-	Round     model.Round    `json:"round"`
-	Players   []model.Player `json:"players"`
+type playerResponse struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
-func gameToResponse(game *model.Game) *gameResponse {
+type gameResponse struct {
+	ID        string           `json:"id"`
+	NumRounds int              `json:"numRounds"`
+	Round     model.Round      `json:"round"`
+	Players   []playerResponse `json:"players"`
+}
+
+func (h *GameHandler) gameToResponse(ctx context.Context, game *model.Game) *gameResponse {
+	var players []playerResponse
+	
+	for _, player := range game.Players {
+		user, err := h.userService.GetUserByID(ctx, player.UserID)
+		playerResp := playerResponse{
+			ID: player.UserID.Hex(),
+		}
+		
+		if err != nil {
+			// If we can't get the user, use a fallback name
+			playerResp.Name = "Unknown Player"
+		} else {
+			playerResp.Name = user.Username
+		}
+		
+		players = append(players, playerResp)
+	}
+
 	return &gameResponse{
 		ID:        game.ID.Hex(),
 		NumRounds: game.NumRounds,
 		Round:     game.Round,
-		Players:   game.Players,
+		Players:   players,
 	}
 }
 
@@ -54,7 +79,7 @@ func (h *GameHandler) GetGameByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(gameToResponse(game))
+	json.NewEncoder(w).Encode(h.gameToResponse(ctx, game))
 }
 
 // POST /game
@@ -79,7 +104,7 @@ func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(gameToResponse(createdGame))
+	json.NewEncoder(w).Encode(h.gameToResponse(ctx, createdGame))
 }
 
 // POST /game/{id}/start
@@ -100,7 +125,7 @@ func (h *GameHandler) StartGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(gameToResponse(startedGame))
+	json.NewEncoder(w).Encode(h.gameToResponse(ctx, startedGame))
 }
 
 // POST /game/{id}/join
@@ -141,5 +166,5 @@ func (h *GameHandler) JoinGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(gameToResponse(joinedGame))
+	json.NewEncoder(w).Encode(h.gameToResponse(ctx, joinedGame))
 }

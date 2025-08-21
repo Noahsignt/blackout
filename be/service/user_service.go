@@ -170,3 +170,7 @@ func (s *UserService) AuthMiddleware(next http.Handler) http.Handler {
         next.ServeHTTP(w, r.WithContext(ctx))
     })
 }
+
+func (s *UserService) GetUserByID(ctx context.Context, userID bson.ObjectID) (*model.User, error) {
+    return s.repo.FindByID(ctx, userID)
+}
