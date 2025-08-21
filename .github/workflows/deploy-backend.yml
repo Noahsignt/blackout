@@ -23,3 +23,6 @@ jobs:
             echo "Connected successfully"
             cd blackout
             git pull
+            systemctl daemon-reload
+            systemctl restart blackout
+            systemctl status blackout --no-pager --lines=20
