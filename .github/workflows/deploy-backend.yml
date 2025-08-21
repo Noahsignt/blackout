@@ -18,7 +18,9 @@ jobs:
           host: 45.79.238.157
           user: root
           pass: ${{ secrets.SERVER_PASSWORD }}
+          known_hosts: ${{ secrets.SERVER_KNOWN_HOSTS }}
           last_ssh: |
             echo "Connected successfully"
-            cd /backout
+            cd /blackout
             git pull
+
