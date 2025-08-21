@@ -21,6 +21,5 @@ jobs:
           known_hosts: ${{ secrets.SERVER_KNOWN_HOSTS }}
           last_ssh: |
             echo "Connected successfully"
-            cd /blackout
+            cd blackout
             git pull
-
