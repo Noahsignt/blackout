@@ -20,9 +20,11 @@ jobs:
           pass: ${{ secrets.SERVER_PASSWORD }}
           known_hosts: ${{ secrets.SERVER_KNOWN_HOSTS }}
           last_ssh: |
-            echo "Connected successfully"
-            cd blackout
+            cd /root/blackout/be
+            git reset --hard
             git pull
+            /usr/local/go/bin/go build -o server .
             systemctl daemon-reload
             systemctl restart blackout
             systemctl status blackout --no-pager --lines=20
+
